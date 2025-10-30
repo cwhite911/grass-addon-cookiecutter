@@ -30,31 +30,27 @@
 
 import sys
 import atexit
+import numpy as np
 import grass.script as gs
-
-
-def clean(name):
-    gs.run_command("g.remove", type="raster", name=name, flags="f", superquiet=True)
+from grass.tools import Tools
 
 
 def main():
+
+    # initalize tools
+    tools = Tools()
+
     # get input options
     options, flags = gs.parser()
     input_raster = options["input"]
     output_raster = options["output"]
 
-    # crete a temporary raster that will be removed upon exit
-    temporary_raster = gs.append_node_pid("gauss")
-    atexit.register(clean, temporary_raster)
-
     # if changing computational region is needed, uncomment
     # gs.use_temp_region()
 
-    # verbose message with translatable string
-    gs.verbose(_("Generating temporary raster {tmp}").format(tmp=temporary_raster))
     # run analysis
-    gs.run_command("r.surf.gauss", output=temporary_raster)
-    gs.mapcalc(f"{output_raster} = {input_raster} + {temporary_raster}")
+    tmp_gauss_surface = tools.r_surf_gauss(output=np.array)
+    tools.r_mapcalc(expression=f"{output_raster} = {input_raster} + {tmp_gauss_surface}")
 
     # save history into the output raster
     gs.raster_history(output_raster, overwrite=True)
