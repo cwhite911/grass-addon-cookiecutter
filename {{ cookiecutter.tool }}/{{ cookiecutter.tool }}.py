@@ -27,7 +27,6 @@
 # %option G_OPT_R_OUTPUT
 # %end
 
-
 import sys
 import atexit
 import grass.script as gs
