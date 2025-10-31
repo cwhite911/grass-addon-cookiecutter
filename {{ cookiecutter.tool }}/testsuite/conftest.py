@@ -9,7 +9,7 @@ from grass.tools import Tools
 
 @pytest.fixture(scope="module")
 def session_for_module(tmp_path_factory):
-    """Module-scoped session with a raster and a possible mask"""
+    """Module-scoped session with a raster"""
     tmp_path = tmp_path_factory.mktemp("data") / "project"
     gs.create_project(tmp_path)
     with gs.setup.init(tmp_path, env=os.environ.copy()) as session:
