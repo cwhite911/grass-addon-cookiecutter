@@ -30,9 +30,12 @@
 
 import sys
 import atexit
-import numpy as np
 import grass.script as gs
 from grass.tools import Tools
+
+
+def clean(name):
+    gs.run_command("g.remove", type="raster", name=name, flags="f", superquiet=True)
 
 
 def main():
@@ -45,12 +48,25 @@ def main():
     input_raster = options["input"]
     output_raster = options["output"]
 
+    # crete a temporary raster that will be removed upon exit
+    temporary_raster = gs.append_node_pid("gauss")
+    atexit.register(clean, temporary_raster)
+
     # if changing computational region is needed, uncomment
-    # gs.use_temp_region()
+    # Use RegionManager/MaskManager as context managers for temporary region/mask:
+    # They automatically restore the previous region/mask on exit.
+    # Example:
+    # with gs.RegionManager():          # temporarily set computational region
+    #     with gs.MaskManager():        # temporarily set raster/vector mask
+    #         # perform region/mask-specific operations here
+    #         pass
+
+    # verbose message with translatable string
+    gs.verbose(_("Generating temporary raster {tmp}").format(tmp=temporary_raster))
 
     # run analysis
-    tmp_gauss_surface = tools.r_surf_gauss(output=np.array)
-    tools.r_mapcalc(expression=f"{output_raster} = {input_raster} + {tmp_gauss_surface}")
+    tools.r_surf_gauss(output=temporary_raster)
+    tools.r_mapcalc(expression=f"{output_raster} = {input_raster} + {temporary_raster}")
 
     # save history into the output raster
     gs.raster_history(output_raster, overwrite=True)
