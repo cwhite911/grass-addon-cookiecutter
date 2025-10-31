@@ -29,6 +29,7 @@
 
 import sys
 import atexit
+from gettext import gettext as _
 import grass.script as gs
 from grass.tools import Tools
 
